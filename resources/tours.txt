@@ -1,0 +1,5 @@
+Lago Todos Los Santos;lacustre;12000
+Ruta del Kuchen;gastronomico;10000
+Volcan Osorno;aventura;18000
+Puerto Varas Nocturno;cultural;8000
+Isla de Chiloé;cultural;15000
