@@ -1,27 +1,39 @@
 # LlanquihueTourApp
 
-Aplicacion Java de consola para cargar, representar y listar tours turisticos de la zona de Llanquihue desde un archivo de texto. El proyecto organiza la logica en capas simples: modelo de dominio, gestion de datos y punto de entrada de interfaz por consola.
+Aplicacion Java de consola para cargar, representar, listar y buscar tours turisticos de la zona de Llanquihue. El proyecto organiza la logica en capas simples: modelo de dominio, gestion de datos, servicios de busqueda y punto de entrada por consola.
 
 ## Que hace el proyecto
 
-LlanquihueTourApp lee un listado de tours desde `resources/tours.txt`, convierte cada linea en un objeto `Tour` y muestra la informacion por consola. Luego aplica un filtro basico para listar solo los tours cuyo precio es mayor a `$10000`.
+LlanquihueTourApp combina dos formas de representar servicios turisticos:
+
+- Crea servicios especializados en memoria, como rutas gastronomicas, paseos lacustres y excursiones culturales.
+- Lee un listado de tours desde `resources/tours.txt`, convierte cada linea en un objeto `Tour` y muestra la informacion por consola.
 
 El flujo principal se encuentra en `src/ui/Main.java`:
 
-1. Crea una instancia de `GestorDatos`.
-2. Carga los tours desde el archivo `resources/tours.txt`.
-3. Imprime todos los tours disponibles.
-4. Filtra e imprime los tours con precio superior a `$10000`.
+1. Crea una instancia de `GestorServicios`.
+2. Crea una instancia de `ServicioBusqueda`.
+3. Genera y muestra servicios turisticos especializados con `crearServicios()`.
+4. Carga los tours desde `resources/tours.txt`.
+5. Busca e imprime los tours de tipo `cultural`.
+6. Imprime todos los tours disponibles.
+7. Filtra e imprime los tours con tarifa superior a `$10000`.
 
 ## Caracteristicas
 
 - Lectura de datos desde archivo plano.
 - Separacion basica por paquetes:
   - `model`: entidades del dominio.
-  - `data`: carga y transformacion de datos.
+  - `data`: creacion y carga de servicios.
+  - `service`: operaciones de busqueda.
   - `ui`: ejecucion principal por consola.
-- Representacion de tours con nombre, tipo y precio.
-- Filtro de tours por precio.
+- Representacion de tours con nombre, tipo y tarifa.
+- Modelo base `ServicioTuristico` con clases especializadas:
+  - `RutaGastronomica`
+  - `PaseoLacustre`
+  - `ExcursionCultural`
+- Busqueda de tours por tipo.
+- Filtro de tours por tarifa.
 - Sin dependencias externas.
 
 ## Estructura del proyecto
@@ -32,9 +44,15 @@ LlanquihueTourApp/
 |   +-- tours.txt
 +-- src/
 |   +-- data/
-|   |   +-- GestorDatos.java
+|   |   +-- GestorServicios.java
 |   +-- model/
+|   |   +-- ExcursionCultural.java
+|   |   +-- PaseoLacustre.java
+|   |   +-- RutaGastronomica.java
+|   |   +-- ServicioTuristico.java
 |   |   +-- Tour.java
+|   +-- service/
+|   |   +-- ServicioBusqueda.java
 |   +-- ui/
 |       +-- Main.java
 +-- .gitignore
@@ -45,42 +63,72 @@ LlanquihueTourApp/
 
 ### `Tour`
 
-Clase del paquete `model` que representa un tour turistico.
+Clase del paquete `model` que representa un tour cargado desde archivo.
 
 Atributos:
 
 - `nombre`: nombre del tour.
 - `tipo`: categoria o tipo de experiencia.
-- `precio`: valor del tour.
+- `tarifa`: valor del tour.
 
-Tambien incluye metodos getters, setters y una implementacion de `toString()` para mostrar el tour en formato legible:
+Incluye getters, setters y una implementacion de `toString()` para mostrar el tour en formato legible:
 
 ```text
-Nombre del tour - tipo - $precio
+nombre | tipo | $tarifa
 ```
 
-### `GestorDatos`
+### `ServicioTuristico`
 
-Clase del paquete `data` encargada de cargar la informacion desde `resources/tours.txt`.
+Clase base del paquete `model` para representar servicios turisticos creados en memoria.
 
-El metodo `cargarTours()`:
+Atributos:
 
-- Abre el archivo de datos.
-- Lee cada linea.
-- Divide los campos usando `;`.
-- Crea objetos `Tour`.
-- Devuelve una lista `ArrayList<Tour>`.
+- `nombre`: nombre del servicio turistico.
+- `duracionHoras`: duracion estimada del servicio.
+
+### `RutaGastronomica`
+
+Subclase de `ServicioTuristico` que agrega:
+
+- `numeroDeParadas`: cantidad de paradas incluidas en la ruta.
+
+### `PaseoLacustre`
+
+Subclase de `ServicioTuristico` que agrega:
+
+- `tipoEmbarcacion`: embarcacion utilizada en el paseo.
+
+### `ExcursionCultural`
+
+Subclase de `ServicioTuristico` que agrega:
+
+- `lugarHistorico`: lugar historico asociado a la excursion.
+
+### `GestorServicios`
+
+Clase del paquete `data` encargada de gestionar servicios y cargar tours.
+
+Metodos principales:
+
+- `crearServicios()`: crea servicios turisticos especializados en memoria y los imprime por consola.
+- `cargarTours()`: lee `resources/tours.txt`, separa cada linea por `;`, crea objetos `Tour` y devuelve un `ArrayList<Tour>`.
+
+### `ServicioBusqueda`
+
+Clase del paquete `service` que contiene operaciones de busqueda sobre tours.
+
+El metodo `buscarPorTipo(ArrayList<Tour> tours, String tipo)` recorre la lista e imprime los tours cuyo tipo coincide, ignorando mayusculas y minusculas.
 
 ### `Main`
 
-Clase del paquete `ui` que ejecuta la aplicacion. Es el punto de entrada del programa y contiene la logica de presentacion por consola.
+Clase del paquete `ui` que ejecuta la aplicacion. Es el punto de entrada del programa y coordina la creacion de servicios, la carga de datos, la busqueda por tipo y los filtros por tarifa.
 
 ## Formato del archivo de datos
 
 El archivo `resources/tours.txt` usa un formato separado por punto y coma:
 
 ```text
-nombre;tipo;precio
+nombre;tipo;tarifa
 ```
 
 Ejemplo:
@@ -94,7 +142,7 @@ Cada linea debe contener exactamente tres valores:
 
 - Nombre del tour.
 - Tipo de tour.
-- Precio como numero entero.
+- Tarifa como numero entero.
 
 ## Requisitos
 
@@ -115,7 +163,7 @@ El proyecto esta configurado como modulo Java de IntelliJ y no utiliza Maven ni 
 Desde la raiz del proyecto:
 
 ```powershell
-javac -d out\production\LlanquihueTourApp src\model\Tour.java src\data\GestorDatos.java src\ui\Main.java
+javac -d out\production\LlanquihueTourApp src\model\*.java src\data\*.java src\service\*.java src\ui\*.java
 java -cp out\production\LlanquihueTourApp ui.Main
 ```
 
@@ -123,29 +171,40 @@ Importante: el programa espera encontrar el archivo de datos en `resources/tours
 
 ## Salida esperada
 
-La aplicacion imprime primero todos los tours cargados y luego solo los tours con precio mayor a `$10000`.
+La aplicacion imprime primero los servicios turisticos creados en memoria. Luego muestra los tours culturales, todos los tours cargados desde archivo y finalmente los tours con tarifa mayor a `$10000`.
 
 Ejemplo:
 
 ```text
+Servicio TuristicoNombre: 'Ruta del Salmon', Duracion de Horas: 4, Numero de paradas: 5
+Servicio TuristicoNombre: 'Ruta del Queso', Duracion de Horas: 3, Numero de paradas: 4
+Servicio TuristicoNombre: 'Lago Llanquihue', Duracion de Horas: 2, Tipo de Embarcacion: Catamaran
+Servicio TuristicoNombre: 'Lago Todos los Santos', Duracion de Horas: 3, Tipo de Embarcacion: Lancha
+Servicio TuristicoNombre: 'Museo Colonial', Duracion de Horas: 5, lugarHistorico: Fuerte Historico
+Servicio TuristicoNombre: 'Puerto Varas', Duracion de Horas: 4, lugarHistorico: Iglesia del Sagrado Corazon
+
+TOURS CULTURALES:
+Puerto Varas Nocturno | cultural | $8000
+Isla de Chiloe | cultural | $15000
 TODOS LOS TOURS:
-Lago Todos Los Santos - lacustre - $12000
-Ruta del Kuchen - gastronomico - $10000
-Volcan Osorno - aventura - $18000
-Puerto Varas Nocturno - cultural - $8000
-Isla de Chiloe - cultural - $15000
+Lago Todos Los Santos | lacustre | $12000
+Ruta del Kuchen | gastronomico | $10000
+Volcan Osorno | aventura | $18000
+Puerto Varas Nocturno | cultural | $8000
+Isla de Chiloe | cultural | $15000
 
 TOURS SOBRE $10000:
-Lago Todos Los Santos - lacustre - $12000
-Volcan Osorno - aventura - $18000
-Isla de Chiloe - cultural - $15000
+Lago Todos Los Santos | lacustre | $12000
+Volcan Osorno | aventura | $18000
+Isla de Chiloe | cultural | $15000
 ```
 
 ## Posibles mejoras
 
 - Validar el formato de cada linea antes de crear un `Tour`.
 - Manejar errores de archivo con mensajes mas especificos.
-- Permitir filtros dinamicos por tipo, precio minimo o precio maximo.
+- Devolver listas desde `crearServicios()` y `buscarPorTipo()` en vez de imprimir directamente.
+- Permitir filtros dinamicos por tipo, tarifa minima o tarifa maxima.
 - Agregar una interfaz de menu por consola.
-- Incorporar pruebas unitarias para `GestorDatos` y `Tour`.
+- Incorporar pruebas unitarias para `GestorServicios`, `ServicioBusqueda` y las clases de `model`.
 - Migrar la carga de archivos a `java.nio.file` para mejorar legibilidad y manejo de rutas.
